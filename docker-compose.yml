@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: workdev-db
+    environment:
+      POSTGRES_DB: workdev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ML Budget Estimation API
+  budget-api:
+    build:
+      context: ./ml_service/budget_estimation
+      dockerfile: Dockerfile
+    container_name: budget-estimation-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/workdev
+      BUDGET_MODEL_PATH: /app/models/budget_model_v1.pkl
+      API_HOST: 0.0.0.0
+      API_PORT: 8001
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+      MAX_WORKERS: 4
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ml_service/budget_estimation/models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - REACT_APP_SUPABASE_URL=${REACT_APP_SUPABASE_URL}
+        - REACT_APP_SUPABASE_ANON_KEY=${REACT_APP_SUPABASE_ANON_KEY}
+        - REACT_APP_BUDGET_API_URL=http://localhost:8001
+    container_name: workdev-frontend
+    depends_on:
+      - budget-api
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+  # Adminer (Database Management UI)
+  adminer:
+    image: adminer:latest
+    container_name: workdev-adminer
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: workdev-network

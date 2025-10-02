@@ -1,0 +1,40 @@
+# GitHub Actions Workflow for Daily GitHub Data Sync
+
+name: Sync GitHub Data Daily
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  sync-github-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Sync All Developer GitHub Data
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/sync-github-data?action=sync-all" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" != "200" ]; then
+            echo "Error: Sync failed with status $http_code"
+            exit 1
+          fi
+          
+          echo "✅ GitHub data sync completed successfully"
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "⚠️ GitHub data sync failed!"
+          # Add notification logic here (Slack, Discord, Email, etc.)

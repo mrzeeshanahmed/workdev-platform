@@ -1,0 +1,43 @@
+# Python ML Service Requirements
+# Install with: pip install -r requirements.txt
+
+# Core ML Libraries
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.0
+scipy==1.11.1
+
+# API Framework
+fastapi==0.101.0
+uvicorn[standard]==0.23.2
+pydantic==2.1.1
+
+# Database
+psycopg2-binary==2.9.7
+asyncpg==0.28.0
+
+# Model Serialization
+joblib==1.3.2
+
+# HTTP Client (for calling Supabase)
+httpx==0.24.1
+aiohttp==3.8.5
+
+# Monitoring & Logging
+prometheus-client==0.17.1
+python-json-logger==2.0.7
+
+# Environment & Configuration
+python-dotenv==1.0.0
+
+# Testing
+pytest==7.4.0
+pytest-asyncio==0.21.1
+
+# Optional: Advanced ML Features
+# Uncomment if needed:
+# tensorflow==2.13.0
+# torch==2.0.1
+# transformers==4.30.2
+# lightgbm==4.0.0
+# xgboost==1.7.6
