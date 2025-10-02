@@ -24,7 +24,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import SOWService from '../services/SOWService';
+import { SOWService } from '../services/SOWService';
 import type {
   SOWDocument,
   SOWDocumentWithDetails,
